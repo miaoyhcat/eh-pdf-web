@@ -1,51 +1,94 @@
 <!doctype html>
 <html lang="zh-CN"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>E-Hentai 转 PDF</title>
+<title>本子 → PDF / 在线看</title>
 <script src="config.js"></script>
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#0f1115;color:#e6e8ee;font:15px/1.6 -apple-system,"Segoe UI","Microsoft YaHei",sans-serif}
-.wrap{max-width:860px;margin:0 auto;padding:32px 20px 80px}
-h1{font-size:22px;margin:0 0 4px}
-.sub{color:#8b93a7;font-size:13px;margin-bottom:24px}
-.card{background:#171a21;border:1px solid #242938;border-radius:12px;padding:18px;margin-bottom:16px}
+.wrap{max-width:880px;margin:0 auto;padding:28px 18px 80px}
+h1{font-size:21px;margin:0 0 3px}
+.sub{color:#8b93a7;font-size:13px;margin-bottom:18px}
+.tabs{display:flex;gap:8px;margin-bottom:14px}
+.tab{padding:8px 16px;border-radius:9px;background:#171a21;border:1px solid #242938;
+ color:#9aa3b8;cursor:pointer;font-size:14px}
+.tab.on{background:#1d2436;border-color:#3a4a75;color:#dbe3f5}
+.pane{display:none}.pane.on{display:block}
+.card{background:#171a21;border:1px solid #242938;border-radius:12px;padding:16px;margin-bottom:14px}
 label{display:block;font-size:13px;color:#9aa3b8;margin-bottom:6px}
-input[type=text]{width:100%;background:#0f1115;border:1px solid #2b3145;color:#e6e8ee;
+input[type=text],select{width:100%;background:#0f1115;border:1px solid #2b3145;color:#e6e8ee;
  border-radius:9px;padding:11px 12px;font-size:14px;outline:none}
-input[type=text]:focus{border-color:#4f7cff}
+input[type=text]:focus,select:focus{border-color:#4f7cff}
 .row{display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap}
-button{background:#4f7cff;color:#fff;border:0;border-radius:9px;padding:11px 20px;font-size:14px;cursor:pointer}
+button{background:#4f7cff;color:#fff;border:0;border-radius:9px;padding:10px 18px;font-size:14px;cursor:pointer}
 button:hover{background:#3f6ae8}
 button.ghost{background:#232936;color:#c9d1e3}
 button.ghost:hover{background:#2b3245}
-.job{background:#171a21;border:1px solid #242938;border-radius:12px;padding:14px 16px;margin-bottom:10px}
-.job h3{margin:0 0 6px;font-size:14px;font-weight:600;word-break:break-all}
+button.mini{padding:6px 12px;font-size:12.5px}
+.job{background:#171a21;border:1px solid #242938;border-radius:12px;padding:13px 15px;margin-bottom:9px}
+.job h3{margin:0 0 5px;font-size:14px;font-weight:600;word-break:break-all}
 .meta{font-size:12px;color:#8b93a7}
-.bar{height:6px;background:#242938;border-radius:3px;overflow:hidden;margin:9px 0}
+.bar{height:6px;background:#242938;border-radius:3px;overflow:hidden;margin:8px 0}
 .bar>i{display:block;height:100%;background:linear-gradient(90deg,#4f7cff,#7aa2ff);width:0;transition:width .4s}
 .tag{font-size:11px;padding:1px 7px;border-radius:20px;background:#232936;color:#9aa3b8;margin-left:6px}
 .tag.done{background:#123526;color:#4ade80}
 .tag.error{background:#3a1620;color:#f87171}
 .tag.running{background:#1a2547;color:#7aa2ff}
-a.dl{display:inline-block;margin-top:8px;background:#123526;color:#4ade80;text-decoration:none;
- padding:7px 14px;border-radius:8px;font-size:13px}
-.err{color:#f87171;font-size:12px;white-space:pre-wrap;margin-top:6px;max-height:140px;overflow:auto}
+.tag.jm{background:#3a2a12;color:#fbbf24}
+.tag.eh{background:#1a2b3f;color:#60a5fa}
+a.dl{display:inline-block;margin-top:7px;background:#123526;color:#4ade80;text-decoration:none;
+ padding:6px 13px;border-radius:8px;font-size:13px}
+a.rd{display:inline-block;margin-top:7px;background:#25203c;color:#c4b5fd;text-decoration:none;
+ padding:6px 13px;border-radius:8px;font-size:13px}
+.err{color:#f87171;font-size:12px;white-space:pre-wrap;margin-top:6px;max-height:120px;overflow:auto}
+.res{display:flex;justify-content:space-between;gap:10px;align-items:center;
+ border-bottom:1px solid #1e222d;padding:10px 2px}
+.res:last-child{border-bottom:0}
+.res .t{font-size:13.5px;line-height:1.45;word-break:break-all}
+.res .a{display:flex;gap:6px;flex-shrink:0}
 details summary{cursor:pointer;color:#9aa3b8;font-size:13px}
 .hint{font-size:12px;color:#6b7488;margin-top:8px}
 </style></head><body><div class="wrap">
-<h1>E-Hentai → PDF</h1>
-<div class="sub">贴上画廊链接，服务器抓图并合成 PDF。支持 e-hentai.org / exhentai.org</div>
+<h1>本子 → PDF / 在线看</h1>
+<div class="sub">支持 E-Hentai / ExHentai 与禁漫 JM，贴链接或 JM 号即可</div>
 
-<div class="card">
-  <label>画廊链接</label>
-  <input type="text" id="url" placeholder="https://e-hentai.org/g/123456/abcdef12/" autocomplete="off">
-  <div class="row">
-    <label style="margin:0"><input type="checkbox" id="orig"> 下载原图（更清晰，更慢）</label>
-    <button id="go">开始生成</button>
-    <button class="ghost" id="refresh">刷新列表</button>
+<div class="tabs">
+  <div class="tab on" data-pane="dl">下载 / 转 PDF</div>
+  <div class="tab" data-pane="search">搜索</div>
+</div>
+
+<div class="pane on" id="pane-dl">
+  <div class="card">
+    <label>画廊链接 或 JM号</label>
+    <input type="text" id="url" placeholder="https://e-hentai.org/g/123456/abcdef12/  或  jm1454202 / 1454202" autocomplete="off">
+    <div class="row">
+      <label style="margin:0"><input type="checkbox" id="orig"> 下载原图（更清晰，更慢）</label>
+      <button id="go">开始生成</button>
+      <button class="ghost" id="refresh">刷新列表</button>
+    </div>
+    <div class="hint" id="msg"></div>
   </div>
-  <div class="hint" id="msg"></div>
+</div>
+
+<div class="pane" id="pane-search">
+  <div class="card">
+    <div class="row" style="margin-top:0">
+      <select id="pf" style="flex:1;min-width:130px">
+        <option value="jm">禁漫 JM</option>
+        <option value="eh">E-Hentai</option>
+      </select>
+      <select id="by" style="flex:1;min-width:130px">
+        <option value="title">按作品名</option>
+        <option value="author">按作者名</option>
+      </select>
+    </div>
+    <div class="row">
+      <input type="text" id="q" style="flex:3;min-width:200px" placeholder="输入作品名或作者名，例如：水龍敬" autocomplete="off">
+      <button id="do-search">搜索</button>
+    </div>
+    <div class="hint" id="smsg"></div>
+  </div>
+  <div class="card" id="results" style="display:none"></div>
 </div>
 
 <div id="list"></div>
@@ -59,7 +102,6 @@ details summary{cursor:pointer;color:#9aa3b8;font-size:13px}
       <label style="margin-top:8px">igneous（exhentai 需要，e-hentai 可留空）</label><input type="text" id="c3" autocomplete="off">
       <div class="row"><button class="ghost" id="saveck">保存 Cookie</button>
       <span class="meta" id="ckstate"></span></div>
-      <div class="hint">浏览器登录 e-hentai 后，F12 → Application → Cookies 里可复制这三项。</div>
     </div>
   </details>
 </div>
@@ -68,55 +110,97 @@ details summary{cursor:pointer;color:#9aa3b8;font-size:13px}
 const $ = s => document.querySelector(s);
 const BASE = (window.BACKEND || "").replace(/\/$/, "");
 const api = (p, opt) => fetch(BASE + p, opt).then(r => r.json());
-const esc = s => (s || "").replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const esc = s => (s || "").replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const fmt = t => t ? new Date(t*1000).toLocaleString('zh-CN',{hour12:false}) : '';
+
+document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
+  document.querySelectorAll('.tab').forEach(x => x.classList.remove('on'));
+  document.querySelectorAll('.pane').forEach(x => x.classList.remove('on'));
+  t.classList.add('on');
+  $('#pane-' + t.dataset.pane).classList.add('on');
+});
+
+function jobCard(j){
+  const tag = j.status==='done'?'done':(j.status==='error'?'error':(j.status==='running'?'running':''));
+  const label = {queued:'排队中',running:'下载中',done:'已完成',error:'失败',canceled:'已取消'}[j.status]||j.status;
+  const p = j.status==='done'?100:(j.progress||0);
+  const pf = j.platform==='jm'?'<span class="tag jm">JM</span>':'<span class="tag eh">EH</span>';
+  return `<div class="job">
+    <h3>${esc(j.title || j.input)}${pf}<span class="tag ${tag}">${label}</span></h3>
+    <div class="meta">${esc(j.input)} · ${fmt(j.created)}</div>
+    <div class="bar"><i style="width:${p}%"></i></div>
+    <div class="meta">${esc(j.message||'')}</div>
+    ${j.status==='done' && j.pdf ? `<a class="dl" href="${BASE}/dl/${j.id}">下载 PDF（${(j.size/1048576).toFixed(1)} MB）</a>` : ''}
+    ${j.readable ? `<a class="rd" href="${BASE}/read/${j.id}" target="_blank">在线阅读</a>` : ''}
+    ${j.status==='error' ? `<div class="err">${esc(j.message||'')}</div>` : ''}
+    ${j.status==='queued'||j.status==='running' ? `<div class="row"><button class="mini ghost" onclick="cancelJob('${j.id}')">取消</button></div>` : ''}
+  </div>`;
+}
 
 async function load(){
   let d;
   try { d = await api('/api/jobs'); }
-  catch (e) { $('#list').innerHTML = '<div class="meta" style="padding:10px 4px">连不上后端：' + esc(String(e)) + '</div>'; return; }
-  const box = $('#list');
-  if (!d.jobs || !d.jobs.length){ box.innerHTML = '<div class="meta" style="padding:10px 4px">还没有任务</div>'; return; }
-  box.innerHTML = d.jobs.map(j => {
-    const tag = j.status==='done'?'done':(j.status==='error'?'error':(j.status==='running'?'running':''));
-    const label = {queued:'排队中',running:'下载中',done:'已完成',error:'失败',canceled:'已取消'}[j.status]||j.status;
-    const p = j.status==='done'?100:(j.progress||0);
-    return `<div class="job">
-      <h3>${esc(j.title || j.url)}<span class="tag ${tag}">${label}</span></h3>
-      <div class="meta">${esc(j.url)} · ${fmt(j.created)}</div>
-      <div class="bar"><i style="width:${p}%"></i></div>
-      <div class="meta">${esc(j.message||'')}</div>
-      ${j.status==='done' && j.pdf ? `<a class="dl" href="${BASE}/dl/${j.id}">下载 PDF（${(j.size/1048576).toFixed(1)} MB）</a>` : ''}
-      ${j.status==='error' ? `<div class="err">${esc(j.message||'')}</div>` : ''}
-      ${j.status==='queued'||j.status==='running' ? `<div class="row"><button class="ghost" onclick="cancel('${j.id}')">取消</button></div>` : ''}
-    </div>`;
-  }).join('');
+  catch (e) { $('#list').innerHTML = '<div class="meta" style="padding:8px 2px">连不上后端：' + esc(String(e)) + '</div>'; return; }
+  $('#list').innerHTML = (d.jobs && d.jobs.length)
+    ? d.jobs.map(jobCard).join('')
+    : '<div class="meta" style="padding:8px 2px">还没有任务</div>';
 }
 
-async function cancel(id){
+async function cancelJob(id){
   await fetch(BASE + '/api/jobs/' + id + '/cancel', {method:'POST'});
   load();
 }
 
+async function submit(raw){
+  return await fetch(BASE + '/api/jobs', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({url: raw, original: $('#orig').checked})
+  }).then(x => x.json());
+}
+
 $('#go').onclick = async () => {
-  const url = $('#url').value.trim();
-  if (!url) return;
+  const v = $('#url').value.trim();
+  if (!v) return;
   $('#msg').textContent = '提交中…';
   try {
-    const d = await fetch(BASE + '/api/jobs', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({url, original: $('#orig').checked})
-    }).then(r => r.json());
+    const d = await submit(v);
     if (d.error){ $('#msg').textContent = d.error; return; }
-    $('#msg').textContent = '已加入队列';
+    $('#msg').textContent = '已加入队列' + (d.title ? '：' + d.title : '');
     $('#url').value = '';
     load();
-  } catch (e) {
-    $('#msg').textContent = '提交失败：' + e;
-  }
+  } catch(e){ $('#msg').textContent = '提交失败：' + e; }
 };
 $('#url').addEventListener('keydown', e => { if (e.key === 'Enter') $('#go').click(); });
 $('#refresh').onclick = load;
+
+$('#do-search').onclick = async () => {
+  const q = $('#q').value.trim();
+  if (!q) return;
+  $('#smsg').textContent = '搜索中…';
+  $('#results').style.display = 'none';
+  try {
+    const d = await api(`/api/search?platform=${$('#pf').value}&by=${$('#by').value}&q=${encodeURIComponent(q)}&page=1`);
+    if (d.error){ $('#smsg').textContent = d.error; return; }
+    $('#smsg').textContent = `找到 ${d.results.length} 条`;
+    window.__res = d.results;
+    if (!d.results.length) return;
+    $('#results').innerHTML = d.results.map((r, i) => `
+      <div class="res">
+        <div class="t">${esc(r.title)}<div class="meta">${esc(r.id)}</div></div>
+        <div class="a"><button class="mini" onclick="pick(${i})">转 PDF</button></div>
+      </div>`).join('');
+    $('#results').style.display = 'block';
+  } catch(e){ $('#smsg').textContent = '搜索失败：' + e; }
+};
+$('#q').addEventListener('keydown', e => { if (e.key === 'Enter') $('#do-search').click(); });
+
+async function pick(i){
+  const r = window.__res[i];
+  const d = await submit(r.platform === 'jm' ? ('jm' + r.id) : r.url);
+  if (d.error){ alert(d.error); return; }
+  document.querySelector('.tab[data-pane="dl"]').click();
+  load();
+}
 
 $('#saveck').onclick = async () => {
   try {
@@ -125,14 +209,14 @@ $('#saveck').onclick = async () => {
       body: JSON.stringify({ipb_member_id:$('#c1').value, ipb_pass_hash:$('#c2').value, igneous:$('#c3').value})
     });
     $('#ckstate').textContent = d.ok ? '已保存' : ('失败: ' + (d.error||''));
-  } catch (e) { $('#ckstate').textContent = '失败: ' + e; }
+  } catch(e){ $('#ckstate').textContent = '失败: ' + e; }
 };
 
 (async () => {
   try {
     const s = await api('/api/cookies');
     $('#ckstate').textContent = s.configured ? '当前：已配置' : '当前：未配置（匿名）';
-  } catch (e) {}
+  } catch(e){}
   load();
   setInterval(load, 3000);
 })();
