@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>E-Hentai 转 PDF</title>
+<script src="config.js"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#0f1115;color:#e6e8ee;font:15px/1.6 -apple-system,"Segoe UI","Microsoft YaHei",sans-serif}
+.wrap{max-width:860px;margin:0 auto;padding:32px 20px 80px}
+h1{font-size:22px;margin:0 0 4px}
+.sub{color:#8b93a7;font-size:13px;margin-bottom:24px}
+.card{background:#171a21;border:1px solid #242938;border-radius:12px;padding:18px;margin-bottom:16px}
+label{display:block;font-size:13px;color:#9aa3b8;margin-bottom:6px}
+input[type=text]{width:100%;background:#0f1115;border:1px solid #2b3145;color:#e6e8ee;
+ border-radius:9px;padding:11px 12px;font-size:14px;outline:none}
+input[type=text]:focus{border-color:#4f7cff}
+.row{display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap}
+button{background:#4f7cff;color:#fff;border:0;border-radius:9px;padding:11px 20px;font-size:14px;cursor:pointer}
+button:hover{background:#3f6ae8}
+button.ghost{background:#232936;color:#c9d1e3}
+button.ghost:hover{background:#2b3245}
+.job{background:#171a21;border:1px solid #242938;border-radius:12px;padding:14px 16px;margin-bottom:10px}
+.job h3{margin:0 0 6px;font-size:14px;font-weight:600;word-break:break-all}
+.meta{font-size:12px;color:#8b93a7}
+.bar{height:6px;background:#242938;border-radius:3px;overflow:hidden;margin:9px 0}
+.bar>i{display:block;height:100%;background:linear-gradient(90deg,#4f7cff,#7aa2ff);width:0;transition:width .4s}
+.tag{font-size:11px;padding:1px 7px;border-radius:20px;background:#232936;color:#9aa3b8;margin-left:6px}
+.tag.done{background:#123526;color:#4ade80}
+.tag.error{background:#3a1620;color:#f87171}
+.tag.running{background:#1a2547;color:#7aa2ff}
+a.dl{display:inline-block;margin-top:8px;background:#123526;color:#4ade80;text-decoration:none;
+ padding:7px 14px;border-radius:8px;font-size:13px}
+.err{color:#f87171;font-size:12px;white-space:pre-wrap;margin-top:6px;max-height:140px;overflow:auto}
+details summary{cursor:pointer;color:#9aa3b8;font-size:13px}
+.hint{font-size:12px;color:#6b7488;margin-top:8px}
+</style></head><body><div class="wrap">
+<h1>E-Hentai → PDF</h1>
+<div class="sub">贴上画廊链接，服务器抓图并合成 PDF。支持 e-hentai.org / exhentai.org</div>
+
+<div class="card">
+  <label>画廊链接</label>
+  <input type="text" id="url" placeholder="https://e-hentai.org/g/123456/abcdef12/" autocomplete="off">
+  <div class="row">
+    <label style="margin:0"><input type="checkbox" id="orig"> 下载原图（更清晰，更慢）</label>
+    <button id="go">开始生成</button>
+    <button class="ghost" id="refresh">刷新列表</button>
+  </div>
+  <div class="hint" id="msg"></div>
+</div>
+
+<div id="list"></div>
+
+<div class="card">
+  <details>
+    <summary>登录 Cookie 设置（可选，exhentai / 高清配额需要）</summary>
+    <div style="margin-top:12px">
+      <label>ipb_member_id</label><input type="text" id="c1" autocomplete="off">
+      <label style="margin-top:8px">ipb_pass_hash</label><input type="text" id="c2" autocomplete="off">
+      <label style="margin-top:8px">igneous（exhentai 需要，e-hentai 可留空）</label><input type="text" id="c3" autocomplete="off">
+      <div class="row"><button class="ghost" id="saveck">保存 Cookie</button>
+      <span class="meta" id="ckstate"></span></div>
+      <div class="hint">浏览器登录 e-hentai 后，F12 → Application → Cookies 里可复制这三项。</div>
+    </div>
+  </details>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const BASE = (window.BACKEND || "").replace(/\/$/, "");
+const api = (p, opt) => fetch(BASE + p, opt).then(r => r.json());
+const esc = s => (s || "").replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const fmt = t => t ? new Date(t*1000).toLocaleString('zh-CN',{hour12:false}) : '';
+
+async function load(){
+  let d;
+  try { d = await api('/api/jobs'); }
+  catch (e) { $('#list').innerHTML = '<div class="meta" style="padding:10px 4px">连不上后端：' + esc(String(e)) + '</div>'; return; }
+  const box = $('#list');
+  if (!d.jobs || !d.jobs.length){ box.innerHTML = '<div class="meta" style="padding:10px 4px">还没有任务</div>'; return; }
+  box.innerHTML = d.jobs.map(j => {
+    const tag = j.status==='done'?'done':(j.status==='error'?'error':(j.status==='running'?'running':''));
+    const label = {queued:'排队中',running:'下载中',done:'已完成',error:'失败',canceled:'已取消'}[j.status]||j.status;
+    const p = j.status==='done'?100:(j.progress||0);
+    return `<div class="job">
+      <h3>${esc(j.title || j.url)}<span class="tag ${tag}">${label}</span></h3>
+      <div class="meta">${esc(j.url)} · ${fmt(j.created)}</div>
+      <div class="bar"><i style="width:${p}%"></i></div>
+      <div class="meta">${esc(j.message||'')}</div>
+      ${j.status==='done' && j.pdf ? `<a class="dl" href="${BASE}/dl/${j.id}">下载 PDF（${(j.size/1048576).toFixed(1)} MB）</a>` : ''}
+      ${j.status==='error' ? `<div class="err">${esc(j.message||'')}</div>` : ''}
+      ${j.status==='queued'||j.status==='running' ? `<div class="row"><button class="ghost" onclick="cancel('${j.id}')">取消</button></div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+async function cancel(id){
+  await fetch(BASE + '/api/jobs/' + id + '/cancel', {method:'POST'});
+  load();
+}
+
+$('#go').onclick = async () => {
+  const url = $('#url').value.trim();
+  if (!url) return;
+  $('#msg').textContent = '提交中…';
+  try {
+    const d = await fetch(BASE + '/api/jobs', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({url, original: $('#orig').checked})
+    }).then(r => r.json());
+    if (d.error){ $('#msg').textContent = d.error; return; }
+    $('#msg').textContent = '已加入队列';
+    $('#url').value = '';
+    load();
+  } catch (e) {
+    $('#msg').textContent = '提交失败：' + e;
+  }
+};
+$('#url').addEventListener('keydown', e => { if (e.key === 'Enter') $('#go').click(); });
+$('#refresh').onclick = load;
+
+$('#saveck').onclick = async () => {
+  try {
+    const d = await api('/api/cookies', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ipb_member_id:$('#c1').value, ipb_pass_hash:$('#c2').value, igneous:$('#c3').value})
+    });
+    $('#ckstate').textContent = d.ok ? '已保存' : ('失败: ' + (d.error||''));
+  } catch (e) { $('#ckstate').textContent = '失败: ' + e; }
+};
+
+(async () => {
+  try {
+    const s = await api('/api/cookies');
+    $('#ckstate').textContent = s.configured ? '当前：已配置' : '当前：未配置（匿名）';
+  } catch (e) {}
+  load();
+  setInterval(load, 3000);
+})();
+</script></div></body></html>
