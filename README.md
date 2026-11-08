@@ -1,14 +1,18 @@
-﻿# E-Hentai → PDF（网页版）
+﻿# E-Hentai 画廊转 PDF 的网页（静态前端）
 
-一个纯静态页面，把画廊链接发给后端服务器，后端抓图合成 PDF。
-页面本身托管在 GitHub Pages，后端在自己的服务器上，源码不开源。
+一个纯静态页面，托管在 GitHub Pages。页面把请求发给自建服务器上的后端，
+由后端抓图、合成 PDF、提供在线阅读。
 
 ## 用
 
-打开 https://miaoyhcat.github.io/eh-pdf-web/ ，粘贴 e-hentai / exhentai 画廊链接，点「开始生成」，
-完成后点「下载 PDF」。
+https://miaoyhcat.github.io/eh-pdf-web/
+
+- **下载 / 转 PDF**：贴 e-hentai / exhentai 画廊链接，或 JM 号（`jm1454202` / `1454202`）
+- **搜索**：选平台（禁漫 / E-Hentai）+ 按作品名或作者名，搜到后一键转 PDF
+- **在线阅读**：任务完成后点「在线阅读」，站内翻页看，无需下载
 
 ## 说明
 
-- `config.js` 里是后端地址，换了隧道/域名只改这一行
-- 页面无框架、无构建，纯 HTML + 原生 JS
+- `config.js` 里是后端地址，后端换了只改这一行
+- 纯 HTML + 原生 JS，无框架无构建
+- 后端不在这个仓库里，源码私有
