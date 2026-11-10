@@ -1,1 +1,1 @@
-window.BACKEND = "https://notification-optics-skilled-fitted.trycloudflare.com";
+window.BACKEND = "https://railway-spectacular-jennifer-deaths.trycloudflare.com";
