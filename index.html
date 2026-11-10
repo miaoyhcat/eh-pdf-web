@@ -43,12 +43,17 @@ code{background:#0f1115;padding:1px 5px;border-radius:4px;font-size:12px}
   }
 
   // 1) GitHub API: never CDN-cached, so a tunnel change is visible within seconds
+  // hard timeout so a blocked/limited api.github.com never stalls the page
   function viaApi() {
+    var ctrl = new AbortController();
+    var timer = setTimeout(function () { ctrl.abort(); }, 2500);
     return fetch("https://api.github.com/repos/" + REPO + "/contents/current.txt",
-                 {cache: "no-store", headers: {"Accept": "application/vnd.github.raw"}})
+                 {cache: "no-store", signal: ctrl.signal,
+                  headers: {"Accept": "application/vnd.github.raw"}})
       .then(function (r) { return r.ok ? r.text() : ""; })
       .then(function (t) { return t.trim(); })
-      .catch(function () { return ""; });
+      .catch(function () { return ""; })
+      .finally(function () { clearTimeout(timer); });
   }
   // 2) same-origin file (CDN cached up to ~10 min)
   function viaFile() {
