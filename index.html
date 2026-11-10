@@ -29,5 +29,16 @@ code{background:#0f1115;padding:1px 5px;border-radius:4px;font-size:12px}
     <code>README.zh-CN.md</code> / <code>README.ja.md</code> available in the docs.
   </div>
 </div>
-<script>setTimeout(function(){ location.replace("https://railway-spectacular-jennifer-deaths.trycloudflare.com/"); }, 800);</script>
+<script>
+(function () {
+  var FALLBACK = (document.querySelector('a.go') || {}).href || "";
+  function go(u) { if (u && u.indexOf("https://") === 0) location.replace(u); }
+  // current.txt 由同步脚本更新，带时间戳避免 CDN 缓存
+  fetch("current.txt?t=" + Date.now(), {cache: "no-store"})
+    .then(function (r) { return r.ok ? r.text() : ""; })
+    .then(function (t) { go(t.trim() || FALLBACK); })
+    .catch(function () { go(FALLBACK); });
+  setTimeout(function () { go(FALLBACK); }, 2500);   // 兜底
+})();
+</script>
 </body></html>
