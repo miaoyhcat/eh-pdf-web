@@ -1,12 +1,12 @@
-﻿# 本子 → PDF / 在线看（GitHub Pages 入口页）
+﻿# Manga → PDF & Reader — launcher
 
-GitHub Pages 强制 HTTPS，而浏览器不允许 HTTPS 页面调用 HTTP 接口；
-在没有域名的前提下，国内网络也无法稳定拿到可信证书。
+Static entry point on GitHub Pages. GitHub Pages is HTTPS-only and static, so it cannot host
+the application itself (Python + `gallery-dl` + PDF pipeline). This page simply forwards to the
+running instance.
 
-所以这个仓库只做**入口跳转**，真正的站点跑在服务器上：
+The application repository is private; UI/docs of the public project live in the project repo.
 
-**http://118.89.111.224/manga/**
+- `index.html` — redirect + manual link
+- `config.js` — kept for compatibility, unused by the launcher
 
-所有功能（下载/转 PDF、双平台搜索、在线阅读、Cookie 配置）都在主站里，本站只是入口。
-
-后端源码不在这个仓库里。
+If the tunnel URL changes, update it in `index.html` (two places).
